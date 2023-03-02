@@ -58,6 +58,22 @@ class Portfolio:
         self.tickers = self.raw_data['Adj Close'].columns.values
 # Clean data for false extremes and NAs
     def cleanData(self, threshold=0.8, drop_extremes=True, excess=5, dateRange=None):
+        """
+        Parameters
+        ----------
+        threshold : float (perc), optional - default 0.8 (80%)
+            DESCRIPTION. Require that many non-NA values. Default: 80% non-NA values.
+        drop_extremes : TYPE, optional
+            DESCRIPTION. The default is True.
+        excess : TYPE, optional
+            DESCRIPTION. The default is 5.
+        dateRange : TYPE, optional
+            DESCRIPTION. The default is None.
+
+        Returns
+        -------
+        None.
+        """
         df = self.raw_data.apply(lambda x: x.replace(0.0,np.nan))
         names = [x for x in df if df[x].count()<len(df)*threshold]
         if len(df[names].count()['Adj Close'].keys())>0:
