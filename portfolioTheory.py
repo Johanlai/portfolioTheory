@@ -100,7 +100,8 @@ class Portfolio:
     def calculate_PortPerformance(self, weights, T=252):
         self.port_return_annual = np.sum(self.logReturns.mean()*weights)*T
         self.port_stdev = np.sqrt(weights.T @ (self.covMatrix @ weights))*np.sqrt(T)
-        self.portReturns = self.logReturns @ weights.T
+        self.portReturns = self.returns @ weights.T
+        self.portlogReturns = self.logReturns @ weights.T
 
             
 def portfolioPerformance(weights, meanReturns, covMatrix, T=252):
