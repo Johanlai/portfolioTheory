@@ -11,4 +11,4 @@ The prices display exponential growth over time.
 
 ![perc_vs_log_return](https://user-images.githubusercontent.com/65450101/222821788-5ff89af6-4b37-49b9-b7a2-5e8aad343167.png)
 
-![image](https://user-images.githubusercontent.com/65450101/222821670-637dddb5-ee70-4102-baf2-e42b65c33437.png)
+![image](https://user-images.githubusercontent.com/65450101/222898382-44e7068e-0e3a-406a-82b8-456889f7a3e2.png)
