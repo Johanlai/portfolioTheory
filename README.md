@@ -11,5 +11,5 @@ The prices display exponential growth over time.
 
 ![perc_vs_log_return](https://user-images.githubusercontent.com/65450101/222821788-5ff89af6-4b37-49b9-b7a2-5e8aad343167.png)
 
-[QQ plot](https://github.com/Johanlai/portfolioTheory/blob/main/Media/QQ%20plot.png?raw=true)
+![QQ plot](https://github.com/Johanlai/portfolioTheory/blob/main/Media/QQ%20plot.png)
 
