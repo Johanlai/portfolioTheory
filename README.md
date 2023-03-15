@@ -20,3 +20,7 @@ The prices display exponential growth over time.
 
 ![QQ plot](https://github.com/Johanlai/portfolioTheory/blob/main/Media/QQ%20plot.png)
 
+## Stuff to try next time
+- Ledoit and Wolf single factor matrix of sharpe
+- CLA
+- LSTM
