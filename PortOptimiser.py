@@ -24,9 +24,16 @@ import matplotlib.pyplot as plt
         if optimiseBy=='MinVariance':
             def optimiser(self, meanReturns, covMatrix, riskFreeRate=riskFreeRate, constraintSet=contraintSet):
                 return pt.minimizeVariance(meanReturns, covMatrix, constraintSet=contraintSet)
+
+    def maxSR(self):
+        return pt.maxSharpeRatio(self.meanReturns,self.covMatrix, self.riskFreeRate, self.contraintSet)
+    def minVar(self):
+        return pt.minimizeVariance(self.meanReturns, self.covMatrix, self.contraintSet)
+            
+        
 """    
 class optPortfolio:
-    def __init__(self, tickers, start, end, optimiseBy= 'maxSharpe', riskFreeRate=0, contraintSet=(0,1), logReturns = True, threshold=0.8, drop_extremes=True, excess=5, dateRange=None):
+    def __init__(self, tickers, start, end, optimiseBy= 'maxSharpe', riskFreeRate=0, constraintSet=(0,1), logReturns = True, threshold=0.8, drop_extremes=True, excess=5, dateRange=None):
         self.portfolio = pt.Portfolio(tickers, start, end)
         self.portfolio.getData()
         self.portfolio.cleanData(threshold=threshold, drop_extremes=drop_extremes, excess=excess, dateRange=dateRange)
@@ -35,21 +42,24 @@ class optPortfolio:
         self.end = end
         self.optimiseBy = optimiseBy
         self.riskFreeRate = riskFreeRate
-        self.constraintSet = contraintSet
+        self.constraintSet = constraintSet
         if logReturns:
-            meanReturns = self.portfolio.logReturns.mean()
+            self.meanReturns = self.portfolio.logReturns.mean()
         else:
-            meanReturns = self.portfolio.returns.mean()
-        covMatrix = self.portfolio.covMatrix
+            self.meanReturns = self.portfolio.returns.mean()
+        self.covMatrix = self.portfolio.covMatrix
         if (self.optimiseBy == 'maxSharpe'):
-            def optimiser(self):
-                return pt.maxSharpeRatio(meanReturns,covMatrix, riskFreeRate, contraintSet)
+            self.optimiser = self.maxSR()
         elif self.optimiseBy == 'minVol':
-            def optimiser(self):
-                return pt.minimizeVariance(meanReturns, covMatrix, contraintSet)
-        self.optimiser = optimiser(self)
-        
+            self.optimiser = self.minVar()
+    def optimiser(self):
+        if self.optimiseBy=='maxSharpe':
+            return 'yes'
+        else:
+            return 'no'
 
+    def test(self):
+        return self.optimiser(self)
     def window_test(self):
                 # Forward Annual
         shiftedRet = self.portfolio.logReturns.shift(-(len(self.portfolio.logReturns[self.portfolio.logReturns.index.year==self.portfolio.logReturns.index.year[0]])))
@@ -98,5 +108,5 @@ end=dt.datetime(2023,1,1)
 threshold=0.9
 
 port = optPortfolio(tickers, start, end, logReturns=True)
-port.window_test()
+port.test()
 

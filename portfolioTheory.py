@@ -76,7 +76,7 @@ class Portfolio:
         """
         df = self.raw_data.apply(lambda x: x.replace(0.0,np.nan))
         names = [x for x in df if df[x].count()<len(df)*threshold]
-        if len(df[names].count()['Adj Close'].keys())>0:
+        if len(names)>0:
             print('{} columns were removed because there were less observations than the threshold ({}):'.format(len(df[names].count()['Adj Close'].keys()),threshold))
             print(((df[names].count()['Adj Close'])/len(df)).map('{:.2%}'.format))
         else:
@@ -140,7 +140,7 @@ def negativeSharpeRatio(weights, meanReturns, covMatrix, riskFreeRate = 0):
     portRetuns, portStdev = portfolioPerformance(weights, meanReturns, covMatrix)
     return - (portRetuns - riskFreeRate)/portStdev
 
-def maxSharpeRatio(meanReturns, covMatrix, riskFreeRate=0, contraintSet=(0,1)):
+def maxSharpeRatio(meanReturns, covMatrix, riskFreeRate=0, constraintSet=(0,1)):
     """
     Parameters
     ----------
@@ -150,7 +150,7 @@ def maxSharpeRatio(meanReturns, covMatrix, riskFreeRate=0, contraintSet=(0,1)):
         DESCRIPTION.
     riskFreeRate : TYPE, optional
         DESCRIPTION. The default is 0.
-    contraintSet : TYPE, optional
+    constraintSet : TYPE, optional
         DESCRIPTION. The default is (0,1).
 
     Returns
@@ -162,7 +162,7 @@ def maxSharpeRatio(meanReturns, covMatrix, riskFreeRate=0, contraintSet=(0,1)):
     numAssets = len(meanReturns)
     args = (meanReturns, covMatrix, riskFreeRate)
     constraints = ({'type':'eq', 'fun': lambda x: np.sum(x) -1})
-    bound = contraintSet
+    bound = constraintSet
     bounds = tuple(bound for asset in range(numAssets))
     result = minimize(negativeSharpeRatio, numAssets*[1./numAssets], args=args,
                       method='SLSQP', bounds=bounds, constraints=constraints)
