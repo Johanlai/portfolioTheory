@@ -5,6 +5,10 @@
 - Visualise the differences between the portfolios generated
 - Used the output parameters to build an application to automate the process
 
+# Summary
+
+results show that using as much data as possible is the most effective.
+
 
 Portfolio optimisation
 There are 21 years in the dataset and an average of 237 days per year.
