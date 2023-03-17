@@ -22,12 +22,13 @@ class optPort:
         self.portfolio.calculate_PortPerformance(pt.equallyWeighted(self.portfolio.logReturns.mean(),self.portfolio.logReturns.cov())[1][1])
         self.optimiseBy = optimiseBy
 
-    def window_test(self,riskFreeRate=0,constraintSet=(0,1)):
+    def movingWindowTest(self,riskFreeRate=0,constraintSet=(0,1)):
         def optimiser(meanReturns,covMatrix, riskFreeRate=riskFreeRate, constraintSet=constraintSet):
             if self.optimiseBy=='maxSR':
                 return pt.maxSharpeRatio(meanReturns,covMatrix, riskFreeRate=riskFreeRate, constraintSet=constraintSet)
             elif self.optimiseBy=='minVol':
                 return pt.minimizeVariance(meanReturns,covMatrix, constraintSet=constraintSet)
+        # Forward FAnnual
         shiftedRet = self.portfolio.logReturns.shift(-(len(self.portfolio.logReturns[self.portfolio.logReturns.index.year==self.portfolio.logReturns.index.year[0]])))
         FannualReset = pd.DataFrame(np.full(len(self.portfolio.logReturns),fill_value=0.0),index=self.portfolio.logReturns.index)
         FannualReset.rename(columns={0:'ret'}, inplace=True)
@@ -57,9 +58,41 @@ class optPort:
         df = pd.concat([FannualReset,FBiAnnualReset,FQuarterlyReset], axis=1)
         df.columns = ['Annual Reset','Bi-annual Reset','Quarterly Reset']
         df.cumsum().plot(figsize=(12,4)); plt.legend();plt.margins(x=0), plt.grid()
-        plt.title('Comparing the frequency of resetting the weights')        
-        return df             
-
+        plt.title('Comparing the frequency of resetting the weights from backwards looking window')        
+        return df
+    
+    def cumulativeSampleTest(self,riskFreeRate=0,constraintSet=(0,1)):
+        def optimiser(meanReturns,covMatrix, riskFreeRate=riskFreeRate, constraintSet=constraintSet):
+            if self.optimiseBy=='maxSR':
+                return pt.maxSharpeRatio(meanReturns,covMatrix, riskFreeRate=riskFreeRate, constraintSet=constraintSet)
+            elif self.optimiseBy=='minVol':
+                return pt.minimizeVariance(meanReturns,covMatrix, constraintSet=constraintSet)
+        # Forward cumulative Annual
+        CannualReset = pd.DataFrame(np.full(len(self.portfolio.logReturns),fill_value=np.nan),index=self.portfolio.logReturns.index)
+        CannualReset.rename(columns={0:'ret'}, inplace=True)
+        for i,x in self.portfolio.logReturns.resample('1Y',label='right',closed='left'):
+            meanReturns = self.portfolio.logReturns[:i].mean()
+            covMatrix = self.portfolio.logReturns[:i].cov()
+            CannualReset['ret'][i:i+relativedelta(years=1)]= self.portfolio.logReturns[i:i+relativedelta(years=1)] @ (optimiser(meanReturns,covMatrix)[1][1]).T
+        # Forward cumulative BiAnnual    
+        CBiAnnualReset = pd.DataFrame(np.full(len(self.portfolio.logReturns),fill_value=np.nan),index=self.portfolio.logReturns.index)
+        CBiAnnualReset.rename(columns={0:'ret'}, inplace=True)
+        for i,x in self.portfolio.logReturns.resample('6m',label='right',closed='left'):
+            meanReturns = self.portfolio.logReturns[:i].mean()
+            covMatrix = self.portfolio.logReturns[:i].cov()
+            CBiAnnualReset['ret'][i:i+relativedelta(months=+6)]= self.portfolio.logReturns[i:i+relativedelta(months=+6)] @ (optimiser(meanReturns,covMatrix)[1][1]).T
+        # Forward cumulative quarterly
+        CQuarterlyReset = pd.DataFrame(np.full(len(self.portfolio.logReturns),fill_value=np.nan),index=self.portfolio.logReturns.index)
+        CQuarterlyReset.rename(columns={0:'ret'}, inplace=True)
+        for i,x in self.portfolio.logReturns.resample('3m',label='right',closed='left'):
+            meanReturns = self.portfolio.logReturns[:i].mean()
+            covMatrix = self.portfolio.logReturns[:i].cov()
+            CQuarterlyReset['ret'][i:i+relativedelta(months=+3)]= self.portfolio.logReturns[i:i+relativedelta(months=+3)] @ (optimiser(meanReturns,covMatrix)[1][1]).T
+        df = pd.concat([CannualReset,CBiAnnualReset,CQuarterlyReset], axis=1)
+        df.columns = ['Annual Reset','Bi-annual Reset','Quarterly Reset']
+        df.cumsum().plot(figsize=(12,4)); plt.legend();plt.margins(x=0), plt.grid()
+        plt.title('Comparing the frequency of resetting the weights with cumulative sample')        
+        return df    
 tickers = ticks.ftse100
 start=dt.datetime(2000,1,1)
 end=dt.datetime(2023,1,1)
