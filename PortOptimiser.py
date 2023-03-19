@@ -11,7 +11,6 @@ import yftickers as ticks
 import datetime as dt
 from dateutil.relativedelta import relativedelta
 import matplotlib.pyplot as plt
-import matplotlib.pyplot as plt
 
 class optPort:
     def __init__(self, tickers, start, end, optimiseBy= 'maxSharpe', riskFreeRate=0, constraintSet=(0,1), logReturns=True, threshold=0.8, drop_extremes=True, excess=5, dateRange=None):
@@ -21,8 +20,44 @@ class optPort:
         self.portfolio.calculate_stats(logReturns=logReturns)
         self.portfolio.calculate_PortPerformance(pt.equallyWeighted(self.portfolio.logReturns.mean(),self.portfolio.logReturns.cov())[1][1])
         self.optimiseBy = optimiseBy
-
-    def movingWindowTest(self,riskFreeRate=0,constraintSet=(0,1)):
+    def testConstraints(self,riskFreeRate=0,constraintSet=(0,1)):
+        def optimiser(meanReturns,covMatrix, riskFreeRate=riskFreeRate, constraintSet=constraintSet):
+            if self.optimiseBy=='maxSR':
+                return pt.maxSharpeRatio(meanReturns,covMatrix, riskFreeRate=riskFreeRate, constraintSet=constraintSet)
+            elif self.optimiseBy=='minVol':
+                return pt.minimizeVariance(meanReturns,covMatrix, constraintSet=constraintSet)
+        meanReturns = self.portfolio.logReturns.mean()
+        covMatrix = self.portfolio.covMatrix
+        w0001 = optimiser(meanReturns,covMatrix,constraintSet=(0.0001, 1))
+        w001 = optimiser(meanReturns,covMatrix,constraintSet=(0.001, 1))
+        w01 = optimiser(meanReturns,covMatrix,constraintSet=(0.01, 1))
+        w = optimiser(meanReturns,covMatrix)
+        fig, axs = plt.subplots(2,2,figsize=(10,4), layout='constrained', sharey=True, sharex=True)
+        fig.suptitle('Distribution of weights with various contraints', fontsize=15)
+        fig.supylabel('Weight')
+        fig.supxlabel('Asset index')
+        axs[0][0].bar(np.arange(1,len(w0001[1][1])+1),height=w0001[1][1])
+        axs[0][0].set_title('contraintSet=(0.0001, 1)')
+        axs[0][1].bar(np.arange(1,len(w001[1][1])+1),height=w001[1][1])
+        axs[0][1].set_title('contraintSet=(0.001, 1)')
+        axs[1][0].bar(np.arange(1,len(w01[1][1])+1),height=w01[1][1])
+        axs[1][0].set_title('contraintSet=(0.01, 1)')
+        axs[1][1].bar(np.arange(1,len(w[1][1])+1),height=w[1][1])
+        axs[1][1].set_title('contraintSet=(0, 1)')
+        for i in axs.flatten():
+            i.grid(visible=True,which='both',linewidth=0.3)
+            i.margins(x=0)
+        plt.show()
+        df = pd.concat([pd.DataFrame(w0001[1]).T.set_index(0),
+                 pd.DataFrame(w001[1]).T.set_index(0), 
+                 pd.DataFrame(w01[1]).T.set_index(0), 
+                 pd.DataFrame(w[1]).T.set_index(0)], axis=1)
+        df.columns = ['(0.0001, 1)','(0.001, 1)','(0.01, 1)','(0, 1)']
+        df.index.name = 'ConstraintSet'
+        df = (df*100).astype(float).round(2)
+        return df.T.astype(str) + '%'
+    
+    def testResetMovingWindow(self,riskFreeRate=0,constraintSet=(0,1)):
         def optimiser(meanReturns,covMatrix, riskFreeRate=riskFreeRate, constraintSet=constraintSet):
             if self.optimiseBy=='maxSR':
                 return pt.maxSharpeRatio(meanReturns,covMatrix, riskFreeRate=riskFreeRate, constraintSet=constraintSet)
@@ -61,7 +96,7 @@ class optPort:
         plt.title('Comparing the frequency of resetting the weights from backwards looking window')        
         return df
     
-    def cumulativeSampleTest(self,riskFreeRate=0,constraintSet=(0,1)):
+    def testResetCumulativeSample(self,riskFreeRate=0,constraintSet=(0,1)):
         def optimiser(meanReturns,covMatrix, riskFreeRate=riskFreeRate, constraintSet=constraintSet):
             if self.optimiseBy=='maxSR':
                 return pt.maxSharpeRatio(meanReturns,covMatrix, riskFreeRate=riskFreeRate, constraintSet=constraintSet)
@@ -92,12 +127,13 @@ class optPort:
         df.columns = ['Annual Reset','Bi-annual Reset','Quarterly Reset']
         df.cumsum().plot(figsize=(12,4)); plt.legend();plt.margins(x=0), plt.grid()
         plt.title('Comparing the frequency of resetting the weights with cumulative sample')        
-        return df    
-tickers = ticks.ftse100
+        return df      
+    
+"""tickers = ticks.ftse100
 start=dt.datetime(2000,1,1)
 end=dt.datetime(2023,1,1)
 threshold=0.9
 
-port = optPortfolio(tickers, start, end, logReturns=True)
+port = optPort(tickers, start, end, logReturns=True)
 port.test()
-
+"""
