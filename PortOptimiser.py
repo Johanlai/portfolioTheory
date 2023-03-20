@@ -129,11 +129,12 @@ class optPort:
         plt.title('Comparing the frequency of resetting the weights with cumulative sample')        
         return df      
     
-"""tickers = ticks.ftse100
+tickers = ticks.simple
 start=dt.datetime(2000,1,1)
 end=dt.datetime(2023,1,1)
 threshold=0.9
 
-port = optPort(tickers, start, end, logReturns=True)
-port.test()
-"""
+port = optPort(tickers, start, end, logReturns=True, optimiseBy='minVol', threshold=0.5)
+constraints = port.testConstraints()
+cumulativeWindow = port.testResetCumulativeSample()
+
