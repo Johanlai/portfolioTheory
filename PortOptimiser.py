@@ -56,7 +56,6 @@ class optPort:
         df.index.name = 'ConstraintSet'
         df = (df*100).astype(float).round(2)
         return df.T.astype(str) + '%'
-    
     def testResetMovingWindow(self,riskFreeRate=0,constraintSet=(0,1)):
         def optimiser(meanReturns,covMatrix, riskFreeRate=riskFreeRate, constraintSet=constraintSet):
             if self.optimiseBy=='maxSR':
@@ -82,7 +81,7 @@ class optPort:
             FBiAnnualReset['ret'][x.index] = shiftedRetBannual.loc[x.index] @ (optimiser(meanReturns,covMatrix)[1][1]).T
         FBiAnnualReset = FBiAnnualReset.shift(int(len(self.portfolio.logReturns[self.portfolio.logReturns.index.year==self.portfolio.logReturns.index.year[0]])/2))
         # Forward Quarterly
-        shiftedRetQuarterly = self.portfolio.logReturns.shift(-int(len(self.portfolio.logReturns[self.portfolio.logReturns.index.year==self.portfolio.logReturns.index.year[0]])/2))
+        shiftedRetQuarterly = self.portfolio.logReturns.shift(-int(len(self.portfolio.logReturns[self.portfolio.logReturns.index.year==self.portfolio.logReturns.index.year[0]])/4))
         FQuarterlyReset = pd.DataFrame(np.full(len(self.portfolio.logReturns),fill_value=0.0),index=self.portfolio.logReturns.index)
         FQuarterlyReset.rename(columns={0:'ret'}, inplace=True)
         for i,x in self.portfolio.logReturns.resample('Q',label='right',closed='left'):
@@ -127,7 +126,29 @@ class optPort:
         df.columns = ['Annual Reset','Bi-annual Reset','Quarterly Reset']
         df.cumsum().plot(figsize=(12,4)); plt.legend();plt.margins(x=0), plt.grid()
         plt.title('Comparing the frequency of resetting the weights with cumulative sample')        
-        return df      
+        return df
+    
+    def testRatios(self, data):
+        res = {}
+        df = pd.concat([self.portfolio.portReturns, data],axis=1)
+        df.rename(columns={0:'EquallyWeighted benchmark'}, inplace=True)
+        for i in df.columns[1:]:
+            data = df[['EquallyWeighted benchmark',i]].dropna()#pd.concat([df['EquallyWeighted benchmark'],df[i]],axis=1).dropna()
+            res[i]= {}
+            res[i]['beta'] = np.round(data.cov().iloc[0][1]/data[i].var(),5)
+            #Alpha = R – Rf – beta (Rm-Rf)
+            res[i]['alpha'] = np.round(data[i].mean()-(res[i]['beta']*(df['EquallyWeighted benchmark'].mean())),5)
+            results = (pd.DataFrame(res))
+        for i in results:
+            plt.scatter(results[i]['alpha'],results[i]['beta'],label=i)
+        plt.title('Alpha vs Beta of different resets (measured against an equally weighted distribution)')
+        plt.legend()
+        plt.grid()
+        plt.xlabel('Beta')
+        plt.ylabel('Alpha')
+        plt.xticks(rotation=90)
+        plt.show()
+        return results 
     
 tickers = ticks.simple
 start=dt.datetime(2000,1,1)
@@ -137,4 +158,5 @@ threshold=0.9
 port = optPort(tickers, start, end, logReturns=True, optimiseBy='minVol', threshold=0.5)
 constraints = port.testConstraints()
 cumulativeWindow = port.testResetCumulativeSample()
+ratiosResults = port.testRatios(cumulativeWindow) 
 

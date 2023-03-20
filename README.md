@@ -8,7 +8,7 @@
 # Summary
 
 results show that using as much data as possible is the most effective.
-
+ 
 
 Portfolio optimisation
 There are 21 years in the dataset and an average of 237 days per year.
@@ -28,3 +28,20 @@ The prices display exponential growth over time.
 - Ledoit and Wolf single factor matrix of sharpe
 - CLA
 - LSTM
+
+# to clean 
+
+### Out of sample window
+The out of sample window used a static window of historical data to set the 
+optimal weights for the next period. Using intevals 3, 6 and 12 months, the 
+reulsts show that the annual (12 month) reset performed the best by a
+subtantial margin.
+
+This is likey because the data in the other windows were too sparse to
+accurately model the mean-variance of the portfolio.
+
+### Cumulative sample
+The cumulative sample used all available historical data to set the optimal
+weights for the following period, and was tested at the same reset intervals
+(3, 6, 12 months). In this test, the differences were negligble and supports
+the idea that the out-of-sample window underperformed due to insufficient data.
